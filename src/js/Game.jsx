@@ -13,21 +13,22 @@ import logoPlaceholder from '../img/logo_none.png';
 
 const { join } = window.require('path');
 const fs = window.require('fs');
+const { dialog } = window.require('electron').remote;
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
     this.toSearch = this.toSearch.bind(this);
+    this.onRemove = this.onRemove.bind(this);
+    this.onPickFile = this.onPickFile.bind(this);
 
     const { location } = this.props;
 
     this.state = {
       game: location.state,
       toSearch: false,
-      grid: null,
-      poster: null,
-      hero: null,
-      logo: null,
+      userdataGridPath: null,
+      librarycachePath: null,
     };
 
     PubSub.publish('showBack', true);
@@ -41,35 +42,12 @@ class Game extends React.Component {
       Steam.getLoggedInUser().then((user) => {
         const userdataGridPath = join(steamPath, 'userdata', String(user), 'config', 'grid');
 
-        let grid = Steam.getCustomImage('horizontalGrid', userdataGridPath, game.appid);
-        let poster = Steam.getCustomImage('verticalGrid', userdataGridPath, game.appid);
-        let hero = Steam.getCustomImage('hero', userdataGridPath, game.appid);
-        let logo = Steam.getCustomImage('logo', userdataGridPath, game.appid);
-
         // Find defaults from the cache if it doesn't exist
         const librarycachePath = join(steamPath, 'appcache', 'librarycache');
 
-        if (!grid && fs.existsSync(join(librarycachePath, `${game.appid}_header.jpg`))) {
-          grid = join(librarycachePath, `${game.appid}_header.jpg`);
-        }
-
-        if (!poster && fs.existsSync(join(librarycachePath, `${game.appid}_library_600x900.jpg`))) {
-          poster = join(librarycachePath, `${game.appid}_library_600x900.jpg`);
-        }
-
-        if (!hero && fs.existsSync(join(librarycachePath, `${game.appid}_library_hero.jpg`))) {
-          hero = join(librarycachePath, `${game.appid}_library_hero.jpg`);
-        }
-
-        if (!logo && fs.existsSync(join(librarycachePath, `${game.appid}_logo.png`))) {
-          logo = join(librarycachePath, `${game.appid}_logo.png`);
-        }
-
         self.setState({
-          grid,
-          poster,
-          hero,
-          logo,
+          userdataGridPath,
+          librarycachePath,
         });
       });
     });
@@ -80,22 +58,108 @@ class Game extends React.Component {
     this.setState({ toSearch: <Redirect to={{ pathname: '/search', state: { ...location.state, assetType } }} /> });
   }
 
-  addNoCache(imageURI) {
-    if (!imageURI) {
+  onRemove(steamAssetType) {
+    const { location } = this.props;
+    const game = location.state;
+    const self = this;
+
+    Steam.addAsset(steamAssetType, game.appid, '').then(() => {
+      PubSub.publish('toast', {
+        logoNode: 'CheckMark',
+        title: 'Successfully Removed!',
+        contents: (
+          <p>
+            Asset is set to the original image.
+          </p>
+        ),
+      });
+      // self.setState({ toGame: <Redirect to={{ pathname: '/game', state: location.state }} /> });
+      self.forceUpdate();
+    });
+  }
+
+  onPickFile(steamAssetType) {
+    const { location } = this.props;
+    const game = location.state;
+    const self = this;
+
+    dialog.showOpenDialog({
+      properties: ['openFile'],
+      filters: [
+        { name: 'Images', extensions: ['jpg', 'png', 'gif'] },
+      ]
+    }, function (files) {
+      if (files !== undefined && files.length) {
+        Steam.addAsset(steamAssetType, game.appid, files[0]).then(() => {
+          PubSub.publish('toast', {
+            logoNode: 'CheckMark',
+            title: 'Successfully Added!',
+            contents: (
+              <p>
+                Asset is set to the specified image.
+              </p>
+            ),
+          });
+
+          self.forceUpdate();
+      // self.setState({ toGame: <Redirect to={{ pathname: '/game', state: location.state }} /> });
+        });
+      }
+    });
+  }
+
+  addNoCache(steamAssetType) {
+    var steamType = null;
+    var cacheName = null;
+    var uri = null;
+    const {
+      game,
+      userdataGridPath,
+      librarycachePath,
+    } = this.state;
+
+    switch (steamAssetType) {
+      case 'horizontalGrid':
+        cacheName = 'header.jpg';
+        break;
+      case 'verticalGrid':
+        cacheName = 'library_600x900.jpg';
+        break;
+      case 'hero':
+        cacheName = 'library_hero.jpg';
+        break;
+      case 'logo':
+        cacheName = 'logo.jpg';
+        break;
+    }
+
+    if (userdataGridPath) {
+      var newUri = Steam.getCustomImage(steamAssetType, userdataGridPath, game.appid);
+
+      if (fs.existsSync(newUri)) {
+        uri = newUri;
+      }
+    }
+
+    if (!uri && librarycachePath) {
+      var newUri = join(librarycachePath, `${game.appid}_${cacheName}`);
+
+      if (fs.existsSync(newUri)) {
+        uri = newUri;
+      }
+    }
+
+    if (!fs.existsSync(uri)) {
       return false;
     }
 
-    return `${imageURI}?${(new Date().getTime())}`;
+    return `${uri}?${(new Date().getTime())}`;
   }
 
   render() {
     const {
       toSearch,
       game,
-      grid,
-      hero,
-      poster,
-      logo,
     } = this.state;
 
     if (toSearch) {
@@ -133,9 +197,19 @@ class Game extends React.Component {
                 width: '100%',
                 height: 'auto',
               }}
-              src={this.addNoCache(hero) || heroPlaceholder}
+              src={this.addNoCache('hero') || heroPlaceholder}
             />
           </Button>
+          <Button
+            icon="Delete"
+            label="Reset"
+            onClick={() => this.onRemove('hero')}
+          />
+          <Button
+            icon="Add"
+            label="Custom Image"
+            onClick={() => this.onPickFile('hero')}
+          />
 
           <div style={{ display: 'flex' }}>
             <div style={{ flex: 1 }}>
@@ -146,9 +220,19 @@ class Game extends React.Component {
                     maxWidth: '100%',
                     height: 'auto',
                   }}
-                  src={this.addNoCache(poster) || capsuleVerticalPlaceholder}
+                  src={this.addNoCache('verticalGrid') || capsuleVerticalPlaceholder}
                 />
               </Button>
+              <Button
+                icon="Delete"
+                label="Reset"
+                onClick={() => this.onRemove('verticalGrid')}
+              />
+              <Button
+                icon="Add"
+                label="Custom Image"
+                onClick={() => this.onPickFile('verticalGrid')}
+              />
             </div>
             <div
               style={{
@@ -163,9 +247,19 @@ class Game extends React.Component {
                     maxWidth: '100%',
                     height: 'auto',
                   }}
-                  src={this.addNoCache(grid) || capsulePlaceholder}
+                  src={this.addNoCache('grid') || capsulePlaceholder}
                 />
               </Button>
+              <Button
+                icon="Delete"
+                label="Reset"
+                onClick={() => this.onRemove('horizontalGrid')}
+              />
+              <Button
+                icon="Add"
+                label="Custom Image"
+                onClick={() => this.onPickFile('horizontalGrid')}
+              />
             </div>
           </div>
           <div>
@@ -176,9 +270,19 @@ class Game extends React.Component {
                   maxWidth: '100%',
                   height: 'auto',
                 }}
-                src={this.addNoCache(logo) || logoPlaceholder}
+                src={this.addNoCache('logo') || logoPlaceholder}
               />
             </Button>
+            <Button
+              icon="Delete"
+              label="Reset"
+              onClick={() => this.onRemove('logo')}
+            />
+            <Button
+              icon="Add"
+              label="Custom Image"
+              onClick={() => this.onPickFile('logo')}
+            />
           </div>
         </div>
       </>
