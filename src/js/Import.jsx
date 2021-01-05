@@ -77,24 +77,73 @@ class Import extends React.Component {
             const ids = platform.games.map((x) => encodeURIComponent(x.id));
             const getGrids = this.SGDB.getGrids({ type: platform.id, id: ids.join(',') }).then((res) => {
               platform.grids = this._formatResponse(ids, res);
+              return res;
             }).catch((err) => {
               log.info(`getGrids: ${err}`);
               // show an error toast
             });
+            gridsPromises.push(platform.games.map((x) => x.name));
             gridsPromises.push(getGrids);
           });
 
           // Update state after we got the grids
-          Promise.all(gridsPromises).then(() => {
+          Promise.all(gridsPromises).then((res) => {
             this.setState({
               isLoaded: true,
               installedPlatforms,
+            });
+            var failedGameNames = [];
+            for (var i = 0; i < res.length; i += 2) {
+              var names = res[i];
+              var result = res[i + 1];
+
+              names.map((name, i) => {
+                if ((!result[i].success) && result[i].errors[0] == "Game not found") {
+                  failedGameNames.push(names[i]);
+                }
+              });
+            }
+            const checkPromises = this.checkFailedGames(failedGameNames);
+            Promise.all(checkPromises).then((res) => {
+              for (var i = 0; i < res.length; i += 2) {
+                var pre = res[i];
+                var msgs = res[i+1];
+
+                log.info(pre);
+                msgs.map((msg) => {
+                  log.info(msg);
+                });
+              }
             });
           });
         }).catch((err) => {
           log.info(`Import: ${err}`);
         });
       });
+  }
+
+  checkFailedGames(failedGameNames) {
+    var promises = [];
+
+    failedGameNames.map((failedGameName) => {
+      promises.push(`${failedGameName}: not found, looking for alternatives...`);
+      const sg = new Promise((resolve, reject) => {
+        this.SGDB.searchGame(failedGameName).then((res) => {
+          var results = [];
+          res.forEach((game, i) => {
+            const types = JSON.stringify(game.types);
+            results.push(`${i}: name: '${game.name}', id: '${game.id}', type: '${types}'`);
+          });
+
+          resolve(results);
+        }).catch((err) => {
+          reject(`searchGame: ${err}`);
+        });
+      });
+      promises.push(sg);
+    });
+
+    return promises;
   }
 
   saveImportedGames(games) {
