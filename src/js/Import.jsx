@@ -77,7 +77,8 @@ class Import extends React.Component {
             const ids = platform.games.map((x) => encodeURIComponent(x.id));
             const getGrids = this.SGDB.getGrids({ type: platform.id, id: ids.join(',') }).then((res) => {
               platform.grids = this._formatResponse(ids, res);
-            }).catch(() => {
+            }).catch((err) => {
+              log.info(`getGrids: ${err}`);
               // show an error toast
             });
             gridsPromises.push(getGrids);
@@ -166,14 +167,16 @@ class Import extends React.Component {
         // Get posters
         const getPosters = this.SGDB.getGrids({ type: platform.id, id: ids.join(','), dimensions: ['600x900'] }).then((res) => {
           posters = this._formatResponse(ids, res);
-        }).catch(() => {
+        }).catch((err) => {
+          log.info(`getGrids: ${err}`);
           // show an error toast
         });
 
         // Get heroes
         const getHeroes = this.SGDB.getHeroes({ type: platform.id, id: ids.join(',') }).then((res) => {
           heroes = this._formatResponse(ids, res);
-        }).catch(() => {
+        }).catch((err) => {
+          log.info(`getHeroes: ${err}`);
           // show an error toast
         });
 
