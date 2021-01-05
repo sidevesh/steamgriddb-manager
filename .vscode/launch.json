@@ -13,7 +13,6 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "dev"],
             "outputCapture": "std",
-            //"smartStep": true,
             "sourceMaps": true,
             "protocol": "inspector",
             "port": 5858,
@@ -32,7 +31,6 @@
                 "!**/node_modules/**"
                         ],
             "outputCapture": "std",
-            //"smartStep": true,
             "sourceMaps": true,
             "protocol": "inspector",
             "port": 5858,
