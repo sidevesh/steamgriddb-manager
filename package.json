@@ -13,6 +13,8 @@
     "start": "electron .",
     "build": "webpack --mode production && electron-builder",
     "run": "webpack --mode development && electron .",
+    "wpack": "webpack --mode development",
+    "dev": "webpack --mode development && electron --nolazy --no-lazy --inspect-brk=5858 .",
     "pack": "electron-builder --dir",
     "publish": "webpack --mode production && electron-builder --publish always",
     "postinstall": "electron-builder install-app-deps"
