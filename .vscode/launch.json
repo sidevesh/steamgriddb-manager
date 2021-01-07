@@ -42,7 +42,8 @@
             "request": "attach",
             "port": 9223,
             "webRoot": "${workspaceFolder}",
-            "timeout": 30000
+            "timeout": 30000,
+            "preLaunchTask": "Sleep Delay"
         },
         {
             "name": "Electron Main (attach)",
@@ -60,9 +61,16 @@
     ],
     "compounds": [
         {
-            "name": "Electron All",
+            "name": "Electron All (direct)",
             "configurations": [
                 "Electron Main (direct)",
+                "Electron Renderer"
+            ]
+        },
+        {
+            "name": "Electron All (npm)",
+            "configurations": [
+                "Electron Main (npm)",
                 "Electron Renderer"
             ]
         }
