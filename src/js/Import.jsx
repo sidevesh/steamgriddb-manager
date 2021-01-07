@@ -75,13 +75,19 @@ class Import extends React.Component {
           installedPlatforms.forEach((platform) => {
             // Get grids for each platform
             const ids = platform.games.map((x) => encodeURIComponent(x.id));
+            const gameName = platform.games.map((x) => x.name);
             const getGrids = this.SGDB.getGrids({ type: platform.id, id: ids.join(',') }).then((res) => {
               platform.grids = this._formatResponse(ids, res);
               return res;
             }).catch((err) => {
-              log.info(`getGrids: ${err}`);
               // show an error toast
-              //this.logFailedGames([res]);
+              if (err.message == "Game not found") {
+                const checkPromises = this.checkFailedGames([{ id: ids, name: gameName }]);
+                Promise.all(checkPromises).then((res) => this.logFailedGames(res));  
+              }
+              else {
+                log.info(`getGrids: ${err}`);
+              }
             });
             gridsPromises.push(platform.games.map(x => ({ name: x.name, id: x.id })));
             gridsPromises.push(getGrids);
@@ -132,7 +138,7 @@ class Import extends React.Component {
     var promises = [];
 
     failedGames.map((failedGame) => {
-      promises.push(`Game '${failedGame.name}', id ${failedGame.id} not found, looking for alternatives...`);
+      promises.push(`Game '${failedGame.name}', id '${failedGame.id}' not found, looking for alternatives...`);
       const sg = new Promise((resolve, reject) => {
         this.SGDB.searchGame(failedGame.name).then((res) => {
           var results = [];
