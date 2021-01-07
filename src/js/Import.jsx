@@ -60,6 +60,12 @@ class Import extends React.Component {
           .reduce((promise, platform) => promise.then(() => {
             this.setState({ loadingText: `Grabbing games from ${platform.name}...` });
             return platform.class.getGames().then((games) => {
+              Steam.getCurrentUserGridPath().then((currentUserGridPath) => {
+                games.forEach((game) => {
+                  var appid = Steam.generateNewAppId(game.exe, game.name);
+                  // game.icon = `"${currentUserGridPath}\\${appid}.png"`;
+                });
+              });
               // Populate games array
               platform.games = games;
             });
