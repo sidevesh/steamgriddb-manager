@@ -31,6 +31,7 @@ class Import extends React.Component {
       grids: [],
       posters: [],
       heroes: [],
+      logos: [],
       installed: false,
       error: false,
     }));
@@ -259,6 +260,7 @@ class Import extends React.Component {
         const ids = games.map((x) => encodeURIComponent(x.id));
         let posters = [];
         let heroes = [];
+        let logos = [];
 
         // Get posters
         const getPosters = this.SGDB.getGrids({ type: platform.id, id: ids.join(','), dimensions: ['600x900'] }).then((res) => {
@@ -271,12 +273,21 @@ class Import extends React.Component {
         // Get heroes
         const getHeroes = this.SGDB.getHeroes({ type: platform.id, id: ids.join(',') }).then((res) => {
           heroes = this._formatResponse(ids, res);
-        }).catch((err) => {
-          log.info(`getHeroes: ${err}`);
+        }).catch((e) => {
+          log.error(`getHeroes: ${e}`);
           // @todo show an error toast
         });
 
-        Promise.all([getPosters, getHeroes]).then(() => {
+        // Get heroes
+        const getLogos = this.SGDB.getLogos({ type: platform.id, id: ids.join(',') }).then((res) => {
+          logos = this._formatResponse(ids, res);
+        }).catch((e) => {
+          log.error(`getLogos: ${e}`);
+          // console.error(e);
+          // @todo show an error toast
+        });
+
+        Promise.all([getPosters, getHeroes, getLogos]).then(() => {
           const downloadPromises = [];
 
           games.forEach((game, i) => {
@@ -302,6 +313,11 @@ class Import extends React.Component {
             // Download heroes
             if (heroes[i]) {
               downloadPromises.push(Steam.addAsset('hero', appId, heroes[i].url));
+            }
+
+            // Download logos
+            if (heroes[i]) {
+              downloadPromises.push(Steam.addAsset('logo', appId, logos[i].url));
             }
           });
 
