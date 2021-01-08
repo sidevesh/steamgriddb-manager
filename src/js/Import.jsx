@@ -102,7 +102,7 @@ class Import extends React.Component {
                 Promise.all(checkPromises).then((res) => this.logFailedGames(res));  
               }
               else {
-                log.error(`getGrids: ${err}`);
+                log.error(`getGrids: ${e}`);
               // console.error(e);
               // @todo Fallback to text search
               // @todo show an error toast
