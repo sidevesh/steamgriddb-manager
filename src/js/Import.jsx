@@ -13,7 +13,6 @@ const SGDB = window.require('steamgriddb');
 const { metrohash64 } = window.require('metrohash');
 const log = window.require('electron-log');
 const { join, extname, dirname } = window.require('path');
-const Lnf = window.require('lnf');
 
 class Import extends React.Component {
   constructor(props) {
@@ -45,7 +44,9 @@ class Import extends React.Component {
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    const nonSteamGames = await Steam.getNonSteamGames();
+
     Promise.all(this.platforms.map((platform) => platform.class.isInstalled()))
       .then((values) => {
         // Set .installed
@@ -59,7 +60,18 @@ class Import extends React.Component {
         const getGames = installedPlatforms
           .reduce((promise, platform) => promise.then(() => {
             this.setState({ loadingText: `Grabbing games from ${platform.name}...` });
+
             return platform.class.getGames().then((games) => {
+              // Filter out any games that are already imported
+              if (nonSteamGames && nonSteamGames[platform.id]) {
+                games = games.filter((game) => {
+                  return !nonSteamGames[platform.id].find((nonSteamGame) => {
+                    return nonSteamGame.gameId === game.id;
+                  });
+                });
+              }
+
+              // nonSteamGames[platform.id].gameId
               // Populate games array
               platform.games = games;
             });
@@ -75,20 +87,28 @@ class Import extends React.Component {
           installedPlatforms.forEach((platform) => {
             // Get grids for each platform
             const ids = platform.games.map((x) => encodeURIComponent(x.id));
+
             const gameName = platform.games.map((x) => x.name);
-            const getGrids = this.SGDB.getGrids({ type: platform.id, id: ids.join(',') }).then((res) => {
+            const getGrids = this.SGDB.getGrids({
+              type: platform.id,
+              id: ids.join(','),
+              dimensions: ['460x215', '920x430'],
+            }).then((res) => {
               platform.grids = this._formatResponse(ids, res);
               return res;
-            }).catch((err) => {
-              // show an error toast
-              if (err.message == "Game not found") {
+            }).catch((e) => {
+              if (e.message == "Game not found") {
                 const checkPromises = this.checkFailedGames([{ id: ids, name: gameName }]);
                 Promise.all(checkPromises).then((res) => this.logFailedGames(res));  
               }
               else {
-                log.info(`getGrids: ${err}`);
+                log.error(`getGrids: ${err}`);
+              // console.error(e);
+              // @todo Fallback to text search
+              // @todo show an error toast
               }
             });
+
             gridsPromises.push(platform.games.map(x => ({ name: x.name, id: x.id })));
             gridsPromises.push(getGrids);
           });
@@ -160,15 +180,25 @@ class Import extends React.Component {
 
   saveImportedGames(games) {
     const gamesStorage = this.store.get('games', {});
+
     games.forEach((game) => {
-      gamesStorage[metrohash64(game.exe + (game.params !== 'undefined' ? game.params : ''))] = game;
+      const key = game.exe + (
+        typeof game.params !== 'undefined'
+          ? game.params
+          : ''
+      );
+
+      const configId = metrohash64(key);
+      gamesStorage[configId] = game;
     });
+
     this.store.set('games', gamesStorage);
   }
 
   // @todo this is horrible but can't be arsed right now
   _formatResponse(ids, res) {
     let formatted = false;
+
     // if only single id then return first grid
     if (ids.length === 1) {
       if (res.length > 0) {
@@ -178,7 +208,9 @@ class Import extends React.Component {
       // if multiple ids treat each object as a request
       formatted = res.map((x) => {
         if (x.success) {
-          if (x.data[0]) return x.data[0];
+          if (x.data[0]) {
+            return x.data[0];
+          }
         }
         return false;
       });
@@ -232,7 +264,7 @@ class Import extends React.Component {
           posters = this._formatResponse(ids, res);
         }).catch((err) => {
           log.info(`getGrids: ${err}`);
-          // show an error toast
+          // @todo show an error toast
         });
 
         // Get heroes
@@ -240,23 +272,25 @@ class Import extends React.Component {
           heroes = this._formatResponse(ids, res);
         }).catch((err) => {
           log.info(`getHeroes: ${err}`);
-          // show an error toast
+          // @todo show an error toast
         });
 
         Promise.all([getPosters, getHeroes]).then(() => {
           const downloadPromises = [];
+
           games.forEach((game, i) => {
             const appId = Steam.generateNewAppId(game.exe, game.name);
 
             // Take (legacy) grids from when we got them for the ImportList
             const savedGrid = platform.grids[platform.games.indexOf(games[i])];
+
             if (platform.grids[i] && savedGrid) {
               const appIdOld = Steam.generateAppId(game.exe, game.name);
-              const saveGrids = Steam.addAsset('horizontalGrid', appId, savedGrid.url).then((dest) => {
-                // Symlink to old appid so it works in BPM
-                Lnf.sync(dest, join(dirname(dest), `${appIdOld}${extname(dest)}`));
-              });
-              downloadPromises.push(saveGrids);
+
+              downloadPromises.push(Steam.addAsset('horizontalGrid', appId, savedGrid.url));
+
+              // Old app id is for Big Picture Mode
+              downloadPromises.push(Steam.addAsset('horizontalGrid', appIdOld, savedGrid.url));
             }
 
             // Download posters
@@ -279,6 +313,8 @@ class Import extends React.Component {
           });
         });
       }).catch((err) => {
+        log.error('Cannot import while Steam is running');
+
         if (err.type === 'OpenError') {
           PubSub.publish('toast', {
             logoNode: 'Error',
@@ -323,7 +359,7 @@ class Import extends React.Component {
         >
           {
             installedPlatforms.map((platform) => {
-              if (!platform.error) {
+              if (!platform.error && platform.games.length) {
                 return (
                   <div key={platform.id}>
                     <h5 style={{ float: 'left', ...theme.typographyStyles.subTitle }}>{platform.name}</h5>
@@ -342,6 +378,7 @@ class Import extends React.Component {
                   </div>
                 );
               }
+
               return <></>;
             })
           }
