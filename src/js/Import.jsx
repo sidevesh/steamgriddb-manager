@@ -85,32 +85,33 @@ class Import extends React.Component {
 
           const gridsPromises = [];
           installedPlatforms.forEach((platform) => {
-            // Get grids for each platform
-            const ids = platform.games.map((x) => encodeURIComponent(x.id));
+            if (platform.games.length) {
+              // Get grids for each platform
+              const ids = platform.games.map((x) => encodeURIComponent(x.id));
+              const gameName = platform.games.map((x) => x.name);
+              const getGrids = this.SGDB.getGrids({
+                type: platform.id,
+                id: ids.join(','),
+                dimensions: ['460x215', '920x430'],
+              }).then((res) => {
+                platform.grids = this._formatResponse(ids, res);
+                return res;
+              }).catch((e) => {
+                if (e.message == "Game not found") {
+                  const checkPromises = this.checkFailedGames([{ id: ids, name: gameName }]);
+                  Promise.all(checkPromises).then((res) => this.logFailedGames(res));
+                }
+                else {
+                  log.error(`getGrids: ${e}`);
+                  // console.error(e);
+                  // @todo Fallback to text search
+                  // @todo show an error toast
+                }
+              });
 
-            const gameName = platform.games.map((x) => x.name);
-            const getGrids = this.SGDB.getGrids({
-              type: platform.id,
-              id: ids.join(','),
-              dimensions: ['460x215', '920x430'],
-            }).then((res) => {
-              platform.grids = this._formatResponse(ids, res);
-              return res;
-            }).catch((e) => {
-              if (e.message == "Game not found") {
-                const checkPromises = this.checkFailedGames([{ id: ids, name: gameName }]);
-                Promise.all(checkPromises).then((res) => this.logFailedGames(res));  
-              }
-              else {
-                log.error(`getGrids: ${e}`);
-              // console.error(e);
-              // @todo Fallback to text search
-              // @todo show an error toast
-              }
-            });
-
-            gridsPromises.push(platform.games.map(x => ({ name: x.name, id: x.id })));
-            gridsPromises.push(getGrids);
+              gridsPromises.push(platform.games.map(x => ({ name: x.name, id: x.id })));
+              gridsPromises.push(getGrids);
+            }
           });
 
           // Update state after we got the grids
