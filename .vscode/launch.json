@@ -9,7 +9,11 @@
             "request": "launch",
             "name": "Electron Main (npm)",
             "cwd": "${workspaceFolder}",
-            "outFiles": ["${workspaceFolder}/**/*.js"],
+            "outFiles": [
+                "${workspaceFolder}/**/*.js",
+                "!**/node_modules/**",
+                "!**/public/**"
+            ],
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "dev"],
             "outputCapture": "std",
@@ -28,7 +32,8 @@
             "args": ["."],
             "outFiles": [
                 "${workspaceFolder}/**/*.js",
-                "!**/node_modules/**"
+                "!**/node_modules/**",
+                "!**/public/**"
                         ],
             "outputCapture": "std",
             "sourceMaps": true,
