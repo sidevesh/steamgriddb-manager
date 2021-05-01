@@ -1,7 +1,12 @@
 {
     "egs":{
       "cd1b8a6e5b6c47369e2a1e2cf7b7f536":{"id":12149, "name":"Night in the Woods"},
-      "bcbc03d8812a44c18f41cf7d5f849265":{"id":3192, "name":"Cities: Skylines"}
+      "bcbc03d8812a44c18f41cf7d5f849265":{"id":3192, "name":"Cities: Skylines"},
+      "c35b9699c4e24c56976b5bd8eceba464":{"id":17535, "name":"Dandara: Trials of Fear Edition"},
+      "19927295d6e3467887d4e830d8c85963":{"id":5349, "name":"Absolute Drift"},
+      "03b7b25a77024cc0adf44777f791ffc4":{"id":4301, "name":"Deponia: The Complete Journey"},
+      "daac7fe46e3647cb80530411d7ec1dc5":{"id":4212, "name":"The Fall"},
+      "Honeycreeper":{"id":5266660, "name":"Diabotical"}
     },
     "gog": {
       "1310457090":{"id":29037, "name":"Noita"}
@@ -12,7 +17,10 @@
     "uplay": {},
     "origin": {},
     "searchGame": {
-      "MinecraftLauncher":{"id":38365, "name":"Minecraft"}
+      "MinecraftLauncher":{"id":38365, "name":"Minecraft"},
+      "MMod":{"id":38365, "name":"Minecraft"},
+      "GRIP Combat Racing Digital Deluxe Edition":{"id":8885, "name":"GRIP: Combat Racing"},
+      "yuzu":{"id":5245878}
     }
   }
   
