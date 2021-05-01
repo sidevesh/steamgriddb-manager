@@ -333,10 +333,10 @@ class Steam {
                 files.forEach((file) => {
                   fs.unlinkSync(file);
                 });
-              });
 
-              fs.writeFileSync(dest, data.read());
-              resolve(dest);
+                fs.writeFileSync(dest, data.read());
+                resolve(dest);
+              });
             });
           }).on('error', (err) => {
             fs.unlink(dest);
@@ -349,18 +349,20 @@ class Steam {
           glob(`${dest.replace(imageExt, '')}.*`, (er, files) => {
             files.forEach((file) => {
               fs.unlinkSync(file);
-
-              if (deleteOnly)
-                resolve(dest);
             });
-            if (!deleteOnly) {
+
+            if (deleteOnly)
+              resolve(dest);
+            else {
               // copy over the file
               fs.copyFile(url, dest, (err) => {
                 if (err) throw err;
                 resolve(dest);
               });
             }
+
           });
+
         }
       });
     });
