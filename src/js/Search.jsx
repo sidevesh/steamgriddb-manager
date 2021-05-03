@@ -83,8 +83,8 @@ class Search extends React.Component {
     downloadPromises.push(Steam.addAsset(location.state.assetType, game.appid, item.url));
     
     // Add horizontalGrid BPM image for Non-Steam Games
-    if (game.appidold && location.state.assetType == 'horizontalGrid') {
-      downloadPromises.push(Steam.addAsset(location.state.assetType, game.appidold, item.url));
+    if (game.appidOld && location.state.assetType == 'horizontalGrid') {
+      downloadPromises.push(Steam.addAsset(location.state.assetType, game.appidOld, item.url));
     }
     
     Promise.all(downloadPromises).then(() => {

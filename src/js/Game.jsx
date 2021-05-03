@@ -73,7 +73,7 @@ class Game extends React.Component {
           </p>
         ),
       });
-      // self.setState({ toGame: <Redirect to={{ pathname: '/game', state: location.state }} /> });
+      
       self.forceUpdate();
     });
   }
@@ -90,7 +90,15 @@ class Game extends React.Component {
       ]
     }, function (files) {
       if (files !== undefined && files.length) {
-        Steam.addAsset(steamAssetType, game.appid, files[0]).then(() => {
+        const downloadPromises = [];
+
+        downloadPromises.push(Steam.addAsset(steamAssetType, game.appid, files[0]));
+        
+        if (game.appidOld && steamAssetType == 'horizontalGrid') {
+          downloadPromises.push(Steam.addAsset(steamAssetType, game.appidOld, files[0]));
+        }
+
+        Promise.all(downloadPromises).then(() => {
           PubSub.publish('toast', {
             logoNode: 'CheckMark',
             title: 'Successfully Added!',
@@ -102,7 +110,6 @@ class Game extends React.Component {
           });
 
           self.forceUpdate();
-      // self.setState({ toGame: <Redirect to={{ pathname: '/game', state: location.state }} /> });
         });
       }
     });
