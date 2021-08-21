@@ -67,11 +67,23 @@ const BNET_GAMES = {
     exes: ['Hearthstone'],
     icon: 'Hearthstone.exe',
   },
+  wlby: {
+    name: 'Crash Bandicoot 4',
+    launchId: 'WLBY',
+    exes: ['CrashBandicoot4'],
+    icon: 'CrashBandicoot4.exe',
+  },
   wow: {
     name: 'World of Warcraft',
     launchId: 'WoW',
     exes: ['Wow'],
     icon: 'World of Warcraft Launcher.exe',
+  },
+  zeus: {
+    name: 'Call of Duty: Black Ops Cold War',
+    launchId: 'ZEUS',
+    exes: ['BlackOpsColdWar'],
+    icon: 'Black Ops Cold War Launcher.exe',
   },
 };
 
