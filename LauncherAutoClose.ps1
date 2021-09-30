@@ -1,6 +1,5 @@
 # This script is used to auto-close launchers that don't have an auto-close setting.
 
-
 param (
     [Parameter(Mandatory=$True)][string]$launchcmd,    # Command to launch game
     [Parameter(Mandatory=$True)][string]$launcher,     # Launcher to kill
@@ -13,8 +12,13 @@ param (
 
 $scriptPath = Split-Path -parent $MyInvocation.MyCommand.Definition
 
+Start-Transcript -Append -Path "$scriptPath\LauncherAutoClose.log"
+
+
 function Wait-ProcessChildren($id) {
+    Write-Host 'Wait-ProcessChildren'
     $child = Get-WmiObject win32_process | where {$_.ParentProcessId -In $id}
+    Write-Host $child
     if ($child) {
         Write-Host 'Child found'
         Wait-Process -Id $child.handle
@@ -64,8 +68,10 @@ Wait-ProcessChildren $gameProcess.Id
 Write-Host 'Game closed'
 
 # Wait for cloud saves or whatever
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 10
 
 # Kill launcher
 Write-Host 'Killing launcher'
 Get-Process $launcher | Stop-Process
+
+Stop-Transcript
