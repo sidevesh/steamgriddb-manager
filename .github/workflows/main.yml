@@ -16,13 +16,8 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 16
           registry-url: https://registry.npmjs.org/
-      - name: Fix node-gyp
-        run: |
-          test node
-          cd node_modules\npm\node_modules\@npmcli\run-script
-          npm install node-gyp@latest
       - name: Install dependencies
         run: npm install
       - name: Build
