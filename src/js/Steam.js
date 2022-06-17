@@ -106,11 +106,13 @@ class Steam {
                   return;
                 }
 
-                games.push({
-                  appid: gameData.AppState.appid,
-                  name: gameData.AppState.name,
-                  type: 'game',
-                });
+                if (!games.any((game) => game.appid === gameData.AppState.appid)) {
+                  games.push({
+                    appid: gameData.AppState.appid,
+                    name: gameData.AppState.name,
+                    type: 'game',
+                  });
+                }
               } catch (err) {
                 log.warn(`Error while parsing ${file}: ${err}`);
               }
