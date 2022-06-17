@@ -137,6 +137,7 @@ class Oculus {
                           icon: exePath,
                           params: "",
                           platform: 'oculus',
+                          isVR: true,
                         });
                     });
                     addGamesPromises.push(addGame);

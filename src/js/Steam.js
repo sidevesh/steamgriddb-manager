@@ -102,7 +102,7 @@ class Steam {
               const data = fs.readFileSync(filePath, 'utf-8');
               try {
                 const gameData = VDF.parse(data);
-                if (gameData.AppState.appid === 228980) {
+                if (gameData.AppState.appid === 228980 || gameData.AppState.appid === 250820) {
                   return;
                 }
 
@@ -401,7 +401,7 @@ class Steam {
               IsHidden: false,
               ShortcutPath: '',
               AllowDesktopConfig: true,
-              OpenVR: false,
+              OpenVR: value.isVR,
               tags: (typeof value.tags !== 'undefined' ? value.tags : []),
             });
           });

@@ -286,6 +286,7 @@ class Import extends React.Component {
       params: game.params,
       tags: [platform.name],
       icon: game.icon,
+      isVR: game.isVR === true ? true : false,
     }));
 
     log.info(`Trying to import ${games.length} games from ${platform.name}`);
