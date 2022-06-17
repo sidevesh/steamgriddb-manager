@@ -18,6 +18,10 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
+      - name: Fix node-gyp
+        run: |
+          cd "C:\hostedtoolcache\windows\node\12.22.12\x64\node_modules\npm\node_modules\@npmcli\run-script"
+          npm install node-gyp@latest
       - name: Install dependencies
         run: npm install
       - name: Build
