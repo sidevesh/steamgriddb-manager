@@ -25,5 +25,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: build
-          path: dist/build.zip
+          name: SteamGridDB Manager Setup 0.4.2.exe
+          path: dist\SteamGridDB Manager Setup 0.4.2.exe

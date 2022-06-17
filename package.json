@@ -11,12 +11,12 @@
   },
   "scripts": {
     "start": "electron .",
-    "build": "webpack --mode production && electron-builder",
+    "build": "webpack --mode production && electron-builder --publish never",
     "run": "webpack --mode development && electron .",
     "watch": "concurrently \"webpack --mode development --watch\" \"electron .\"",
     "wpack": "webpack --mode development",
     "dev": "webpack --mode development && electron --nolazy --no-lazy --inspect-brk=5858 --remote-debugging-port=9223 .",
-    "pack": "electron-builder --dir",
+    "pack": "electron-builder --dir --publish never",
     "publish": "webpack --mode production && electron-builder --publish always",
     "postinstall": "electron-builder install-app-deps"
   },
