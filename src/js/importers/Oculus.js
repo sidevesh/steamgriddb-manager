@@ -107,10 +107,7 @@ class Oculus {
       const url = "https://www.oculus.com/experiences/rift/" + appId + "/";
       request.get(url, (error, response, data) => {
         const $ = cheerio.load(data);
-        let jsonStr = $("head > script[type='application/ld+json']").html();
-        let json = JSON.parse(jsonStr);
-        //log.info(json);
-        resolve(json.name);
+        resolve($('head > title').text().split(" on Oculus Rift | Oculus")[0]);
       });
     });
   }
