@@ -39,30 +39,36 @@ class Oculus {
         }
 
         let oculusLibraryPaths = [];
+        let oculusLibraryPathsPromises = [];
 
         log.info(`Import: Oculus: ${keys.length}: ${keys.map(k => k.path).join(',')}, ${keys.map(k => k.key).join(',')}`);
         keys.forEach(key => {
-          // Get the Path for the Library
-          key.values((err, items) => {
-            if (err) {
-              reject(err);
-            }
-
-            items.forEach((item) => {
-              if (item.name === 'Path') {
-                log.info(`Import: Oculus: Found path: ${item.value}`);
-                oculusLibraryPaths.push(item.value);
+          oculusLibraryPathsPromises.push(new Promise((oculusLibraryPathsPromiseResolve) => {
+            // Get the Path for the Library
+            key.values((err, items) => {
+              if (err) {
+                reject(err);
               }
+
+              items.forEach((item) => {
+                if (item.name === 'Path') {
+                  log.info(`Import: Oculus: Found path: ${item.value}`);
+                  oculusLibraryPaths.push(item.value);
+                  oculusLibraryPathsPromiseResolve();
+                }
+              });
             });
-          });
+          }));
         });
 
-        if (oculusLibraryPaths.length !== 0) {
-          log.info('Import: Completed oculus');
-          resolve(oculusLibraryPaths);
-        } else {
-          reject(new Error('Could not find Oculus Library path.'));
+        Promise.all(oculusLibraryPathsPromises).then(() => {
+          if (oculusLibraryPaths.length !== 0) {
+            log.info('Import: Completed oculus');
+            resolve(oculusLibraryPaths);
+          } else {
+            reject(new Error('Could not find Oculus Library path.'));
           }
+        });
       });
     });
   }
