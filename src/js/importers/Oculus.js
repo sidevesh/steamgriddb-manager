@@ -50,6 +50,7 @@ class Oculus {
 
             items.forEach((item) => {
               if (item.name === 'Path') {
+                log.info(`Import: Oculus: Found path: ${item.value}`);
                 oculusLibraryPaths.push(item.value);
               }
             });
