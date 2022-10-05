@@ -41,7 +41,6 @@ class Oculus {
         let oculusLibraryPaths = [];
         let oculusLibraryPathsPromises = [];
 
-        log.info(`Import: Oculus: ${keys.length}: ${keys.map(k => k.path).join(',')}, ${keys.map(k => k.key).join(',')}`);
         keys.forEach(key => {
           oculusLibraryPathsPromises.push(new Promise((oculusLibraryPathsPromiseResolve) => {
             // Get the Path for the Library
@@ -52,7 +51,7 @@ class Oculus {
 
               items.forEach((item) => {
                 if (item.name === 'Path') {
-                  log.info(`Import: Oculus: Found path: ${item.value}`);
+                  log.info(`Import: oculus - Found path: ${item.value}`);
                   oculusLibraryPaths.push(item.value);
                   oculusLibraryPathsPromiseResolve();
                 }
@@ -125,21 +124,21 @@ class Oculus {
       log.info('Import: Started oculus');
 
       this.getOculusLibraryPaths().then(oculusLibraryPaths => {
-        log.info(`Import: Oculus: oculusLibraryPaths: ${oculusLibraryPaths.join(',')}`);
+        log.info(`Import: oculus - oculusLibraryPaths: ${oculusLibraryPaths.join(',')}`);
         const games = [];
         const addGamesPromises = [];
 
         oculusLibraryPaths.forEach(oculusLibraryPath => {
           this.getVolumeLetteredPath(oculusLibraryPath).then(volumeLetteredPath => {
-              log.info(`Import: Oculus: volumeLetteredPath generated: ${volumeLetteredPath}`);
+              log.info(`Import: oculus - volumeLetteredPath generated: ${volumeLetteredPath}`);
               const manifestDir = volumeLetteredPath + "\\Manifests";
               const softwareDir = volumeLetteredPath + "\\Software";
         
               this.getFilesFromPath(manifestDir, '.json.mini').then(filePaths => {
                 filePaths.forEach(fp => {
-                  log.info(`Import: Oculus: filePath found: ${fp}`);
+                  log.info(`Import: oculus - filePath found: ${fp}`);
                   let manifest = JSON.parse(fs.readFileSync(manifestDir + "\\" + fp));
-                  log.info(`Import: Oculus: Manifest found: ${fs.readFileSync(manifestDir + "\\" + fp)}`);
+                  log.info(`Import: oculus - Manifest found: ${fs.readFileSync(manifestDir + "\\" + fp)}`);
                   const exePath = softwareDir + "\\" + manifest.canonicalName + "\\" + manifest.launchFile;
                   const addGame = this.getGameTitle(manifest.appId).then(name => {
                     games.push({
