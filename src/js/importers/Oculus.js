@@ -45,16 +45,16 @@ class Oculus {
               reject(err);
             }
         
-            let oculusLibraryPath = [];
+            let oculusLibraryPaths = [];
         
             items.forEach((item) => {
               if (item.name === 'Path') {
-                oculusLibraryPath.push(item.value);
+                oculusLibraryPaths.push(item.value);
               }
             });
         
             if (oculusLibraryPath.length !== 0) {
-              resolve(oculusLibraryPath);
+              resolve(oculusLibraryPaths);
             } else {
               reject(new Error('Could not find Oculus Library path.'));
             }
@@ -117,6 +117,15 @@ class Oculus {
 
       this.getOculusLibraryPaths().then(oculusLibraryPaths => {
         //log.info('Got Oculus Library path: ' + oculusLibraryPath);
+        PubSub.publish('toast', {
+          logoNode: 'CheckMark',
+          title: oculusLibraryPaths.join(','),
+          contents: (
+            <p>
+              oculusLibraryPaths.join(',')
+            </p>
+          ),
+        });
         oculusLibraryPaths.forEach(oculusLibraryPath => {
           this.getVolumeLetteredPath(oculusLibraryPath).then(volumeLetteredPath => {
               const manifestDir = volumeLetteredPath + "\\Manifests";
