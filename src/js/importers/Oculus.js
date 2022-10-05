@@ -38,28 +38,30 @@ class Oculus {
           reject(err);
         }
 
+        let oculusLibraryPaths = [];
+
+        log.info(`Import: Oculus: ${keys.length}: ${keys.map(k => k.path).join(',')}, ${keys.map(k => k.key).join(',')}`);
         keys.forEach(key => {
           // Get the Path for the Library
           key.values((err, items) => {
             if (err) {
               reject(err);
             }
-        
-            let oculusLibraryPaths = [];
-        
+
             items.forEach((item) => {
               if (item.name === 'Path') {
                 oculusLibraryPaths.push(item.value);
               }
             });
-        
-            if (oculusLibraryPaths.length !== 0) {
-              resolve(oculusLibraryPaths);
-            } else {
-              reject(new Error('Could not find Oculus Library path.'));
-            }
           });
         });
+
+        if (oculusLibraryPaths.length !== 0) {
+          log.info('Import: Completed oculus');
+          resolve(oculusLibraryPaths);
+        } else {
+          reject(new Error('Could not find Oculus Library path.'));
+          }
       });
     });
   }
@@ -153,7 +155,6 @@ class Oculus {
           log.info('Import: Completed oculus');
           return resolve(games);
         }).catch((err) => reject(err));
-
       });
     });
   }
