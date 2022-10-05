@@ -116,47 +116,40 @@ class Oculus {
       log.info('Import: Started oculus');
 
       this.getOculusLibraryPaths().then(oculusLibraryPaths => {
-        PubSub.publish('toast', {
-          logoNode: 'CheckMark',
-          title: oculusLibraryPaths.join(','),
-          contents: (
-            <p>
-              oculusLibraryPaths.join(',')
-            </p>
-          ),
-        });
+        const games = [];
+        const addGamesPromises = [];
+
         oculusLibraryPaths.forEach(oculusLibraryPath => {
           this.getVolumeLetteredPath(oculusLibraryPath).then(volumeLetteredPath => {
               const manifestDir = volumeLetteredPath + "\\Manifests";
               const softwareDir = volumeLetteredPath + "\\Software";
-              const games = [];
-              const addGamesPromises = [];
         
               this.getFilesFromPath(manifestDir, '.json.mini').then(filePaths => {
-                  filePaths.forEach(fp => {
-                      let manifest = JSON.parse(fs.readFileSync(manifestDir + "\\" + fp));
-                      const exePath = softwareDir + "\\" + manifest.canonicalName + "\\" + manifest.launchFile;
-                      const addGame = this.getGameTitle(manifest.appId).then(name => {
-                          games.push({
-                            id: manifest.appId,
-                            name: name,
-                            exe: exePath,
-                            icon: exePath,
-                            params: "",
-                            platform: 'oculus',
-                            isVR: true,
-                          });
-                      });
-                      addGamesPromises.push(addGame);
+                filePaths.forEach(fp => {
+                  let manifest = JSON.parse(fs.readFileSync(manifestDir + "\\" + fp));
+                  const exePath = softwareDir + "\\" + manifest.canonicalName + "\\" + manifest.launchFile;
+                  const addGame = this.getGameTitle(manifest.appId).then(name => {
+                    games.push({
+                      id: manifest.appId,
+                      name: name,
+                      exe: exePath,
+                      icon: exePath,
+                      params: "",
+                      platform: 'oculus',
+                      isVR: true,
                     });
-
-                    Promise.all(addGamesPromises).then(() => {
-                      log.info('Import: Completed oculus');
-                      return resolve(games);
-                    }).catch((err) => reject(err));
+                  });
+                  addGamesPromises.push(addGame);
+                });
               }).catch((err) => reject(err));
           }).catch((err) => reject(err));
         });
+
+        Promise.all(addGamesPromises).then(() => {
+          log.info('Import: Completed oculus');
+          return resolve(games);
+        }).catch((err) => reject(err));
+
       });
     });
   }
