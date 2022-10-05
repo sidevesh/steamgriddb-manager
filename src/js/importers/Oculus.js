@@ -53,7 +53,7 @@ class Oculus {
               }
             });
         
-            if (oculusLibraryPath.length !== 0) {
+            if (oculusLibraryPaths.length !== 0) {
               resolve(oculusLibraryPaths);
             } else {
               reject(new Error('Could not find Oculus Library path.'));
@@ -116,7 +116,6 @@ class Oculus {
       log.info('Import: Started oculus');
 
       this.getOculusLibraryPaths().then(oculusLibraryPaths => {
-        //log.info('Got Oculus Library path: ' + oculusLibraryPath);
         PubSub.publish('toast', {
           logoNode: 'CheckMark',
           title: oculusLibraryPaths.join(','),
