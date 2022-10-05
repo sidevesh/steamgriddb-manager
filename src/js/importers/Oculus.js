@@ -7,7 +7,11 @@ const Shell = require('node-powershell');
 
 class Oculus {
   static isInstalled() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, rejectx) => {
+      let reject = (x) => {
+        rejectx(x);
+        log.error(x);
+      }
       const reg = new Registry({
         hive: Registry.HKCU,
         arch: 'x86',
@@ -25,7 +29,11 @@ class Oculus {
 
   // Gets the configured Oculus library paths
   static getOculusLibraryPaths() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, rejectx) => {
+      let reject = (x) => {
+        rejectx(x);
+        log.error(x);
+      }
       const reg = new Registry({
         hive: Registry.HKCU,
         arch: 'x86',
@@ -62,7 +70,7 @@ class Oculus {
 
         Promise.all(oculusLibraryPathsPromises).then(() => {
           if (oculusLibraryPaths.length !== 0) {
-            log.info('Import: Completed oculus');
+            log.info(`Import: oculus - oculusLibraryPaths: ${oculusLibraryPaths.join(',')}`);
             resolve(oculusLibraryPaths);
           } else {
             reject(new Error('Could not find Oculus Library path.'));
@@ -73,7 +81,11 @@ class Oculus {
   }
 
   static getFilesFromPath(path, extension) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, rejectx) => {
+      let reject = (x) => {
+        rejectx(x);
+        log.error(x);
+      }
       let dir = fs.readdirSync( path );
       resolve(dir.filter( elm => elm.match(new RegExp(`.*\.(${extension})`, 'ig'))));
     });
@@ -83,7 +95,11 @@ class Oculus {
   // i.e. "\\?\Volume{56d4b0e2-0000-0000-0000-00a861000000}\"
   // ---> "F:\"
   static getVolumeLetteredPath(volumeGUIDPath) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, rejectx) => {
+      let reject = (x) => {
+        rejectx(x);
+        log.error(x);
+      }
         const command = "GWMI -namespace root\\cimv2 -class win32_volume | FL -property DriveLetter, DeviceID";
         const ps = new Shell({
             executionPolicy: 'Bypass',
@@ -110,7 +126,11 @@ class Oculus {
 
   // Gets the game title from Oculus website
   static getGameTitle(appId) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, rejectx) => {
+      let reject = (x) => {
+        rejectx(x);
+        log.error(x);
+      }
       const url = "https://www.oculus.com/experiences/rift/" + appId + "/";
       request.get(url, (error, response, data) => {
         const $ = cheerio.load(data);
@@ -120,11 +140,14 @@ class Oculus {
   }
 
   static getGames() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, rejectx) => {
+      let reject = (x) => {
+        rejectx(x);
+        log.error(x);
+      }
       log.info('Import: Started oculus');
 
       this.getOculusLibraryPaths().then(oculusLibraryPaths => {
-        log.info(`Import: oculus - oculusLibraryPaths: ${oculusLibraryPaths.join(',')}`);
         const games = [];
         const addGamesPromises = [];
 
