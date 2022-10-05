@@ -7,11 +7,7 @@ const Shell = require('node-powershell');
 
 class Oculus {
   static isInstalled() {
-    return new Promise((resolve, rejectx) => {
-      let reject = (x) => {
-        rejectx(x);
-        log.error(x);
-      }
+    return new Promise((resolve, reject) => {
       const reg = new Registry({
         hive: Registry.HKCU,
         arch: 'x86',
@@ -29,11 +25,7 @@ class Oculus {
 
   // Gets the configured Oculus library paths
   static getOculusLibraryPaths() {
-    return new Promise((resolve, rejectx) => {
-      let reject = (x) => {
-        rejectx(x);
-        log.error(x);
-      }
+    return new Promise((resolve, reject) => {
       const reg = new Registry({
         hive: Registry.HKCU,
         arch: 'x86',
@@ -46,8 +38,8 @@ class Oculus {
           reject(err);
         }
 
-        let oculusLibraryPaths = [];
-        let oculusLibraryPathsPromises = [];
+        const oculusLibraryPaths = [];
+        const oculusLibraryPathsPromises = [];
 
         keys.forEach(key => {
           oculusLibraryPathsPromises.push(new Promise((oculusLibraryPathsPromiseResolve) => {
@@ -81,11 +73,7 @@ class Oculus {
   }
 
   static getFilesFromPath(path, extension) {
-    return new Promise((resolve, rejectx) => {
-      let reject = (x) => {
-        rejectx(x);
-        log.error(x);
-      }
+    return new Promise((resolve, reject) => {
       let dir = fs.readdirSync( path );
       resolve(dir.filter( elm => elm.match(new RegExp(`.*\.(${extension})`, 'ig'))));
     });
@@ -95,11 +83,7 @@ class Oculus {
   // i.e. "\\?\Volume{56d4b0e2-0000-0000-0000-00a861000000}\"
   // ---> "F:\"
   static getVolumeLetteredPath(volumeGUIDPath) {
-    return new Promise((resolve, rejectx) => {
-      let reject = (x) => {
-        rejectx(x);
-        log.error(x);
-      }
+    return new Promise((resolve, reject) => {
         const command = "GWMI -namespace root\\cimv2 -class win32_volume | FL -property DriveLetter, DeviceID";
         const ps = new Shell({
             executionPolicy: 'Bypass',
@@ -126,11 +110,7 @@ class Oculus {
 
   // Gets the game title from Oculus website
   static getGameTitle(appId) {
-    return new Promise((resolve, rejectx) => {
-      let reject = (x) => {
-        rejectx(x);
-        log.error(x);
-      }
+    return new Promise((resolve, reject) => {
       const url = "https://www.oculus.com/experiences/rift/" + appId + "/";
       request.get(url, (error, response, data) => {
         const $ = cheerio.load(data);
@@ -140,47 +120,54 @@ class Oculus {
   }
 
   static getGames() {
-    return new Promise((resolve, rejectx) => {
-      let reject = (x) => {
-        rejectx(x);
-        log.error(x);
-      }
+    return new Promise((resolve, reject) => {
       log.info('Import: Started oculus');
 
       this.getOculusLibraryPaths().then(oculusLibraryPaths => {
         const games = [];
-        const addGamesPromises = [];
+        const addGamesForOculusLibraryPathPromises = [];
 
         oculusLibraryPaths.forEach(oculusLibraryPath => {
-          this.getVolumeLetteredPath(oculusLibraryPath).then(volumeLetteredPath => {
+          addGamesForOculusLibraryPathPromises.push(new Promise((addGamesForOculusLibraryPathPromiseResolve) => {
+            this.getVolumeLetteredPath(oculusLibraryPath).then(volumeLetteredPath => {
               log.info(`Import: oculus - volumeLetteredPath generated: ${volumeLetteredPath}`);
               const manifestDir = volumeLetteredPath + "\\Manifests";
               const softwareDir = volumeLetteredPath + "\\Software";
-        
+          
               this.getFilesFromPath(manifestDir, '.json.mini').then(filePaths => {
+                const addGamePromises = [];
+
                 filePaths.forEach(fp => {
-                  log.info(`Import: oculus - filePath found: ${fp}`);
-                  let manifest = JSON.parse(fs.readFileSync(manifestDir + "\\" + fp));
-                  log.info(`Import: oculus - Manifest found: ${fs.readFileSync(manifestDir + "\\" + fp)}`);
-                  const exePath = softwareDir + "\\" + manifest.canonicalName + "\\" + manifest.launchFile;
-                  const addGame = this.getGameTitle(manifest.appId).then(name => {
-                    games.push({
-                      id: manifest.appId,
-                      name: name,
-                      exe: exePath,
-                      icon: exePath,
-                      params: "",
-                      platform: 'oculus',
-                      isVR: true,
-                    });
-                  });
-                  addGamesPromises.push(addGame);
+                  addGamePromises.push(new Promise((addGamePromiseResolve) => {
+                    log.info(`Import: oculus - filePath found: ${fp}`);
+                    let manifest = JSON.parse(fs.readFileSync(manifestDir + "\\" + fp));
+                    log.info(`Import: oculus - Manifest found: ${fs.readFileSync(manifestDir + "\\" + fp)}`);
+                    const exePath = softwareDir + "\\" + manifest.canonicalName + "\\" + manifest.launchFile;
+                    const addGame = this.getGameTitle(manifest.appId).then(name => {
+                      games.push({
+                        id: manifest.appId,
+                        name: name,
+                        exe: exePath,
+                        icon: exePath,
+                        params: "",
+                        platform: 'oculus',
+                        isVR: true,
+                      });
+                      addGamePromiseResolve();
+                    })
+                  }));
                 });
-              }).catch((err) => reject(err));
-          }).catch((err) => reject(err));
+
+                Promise.all(addGamesPromises).then(() => {
+                  log.info(`Import: oculus - Completed adding games for: volumeLetteredPath`);
+                  addGamesForOculusLibraryPathPromiseResolve();
+                });
+              });
+            });
+          }));
         });
 
-        Promise.all(addGamesPromises).then(() => {
+        Promise.all(addGamesForOculusLibraryPathPromises).then(() => {
           log.info('Import: Completed oculus');
           return resolve(games);
         }).catch((err) => reject(err));
