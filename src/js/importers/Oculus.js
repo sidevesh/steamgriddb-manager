@@ -161,7 +161,7 @@ class Oculus {
                 });
 
                 Promise.all(addGamePromises).then(() => {
-                  log.info(`Import: oculus - Completed adding games for: volumeLetteredPath`);
+                  log.info(`Import: oculus - Completed adding games for: ${volumeLetteredPath}`);
                   addGamesForOculusLibraryPathPromiseResolve();
                 });
               });
