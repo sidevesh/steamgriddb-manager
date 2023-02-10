@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "build": "webpack --mode development && electron-builder --publish never",
+    "build": "webpack --mode production && electron-builder --publish never",
     "run": "webpack --mode development && electron .",
     "watch": "concurrently \"webpack --mode development --watch\" \"electron .\"",
     "wpack": "webpack --mode development",
