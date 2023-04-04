@@ -93,14 +93,11 @@ class Oculus {
         ps.invoke().then(output => {
             // Ugly way to parse Drive Letters and GUIDs from the console output
             let pairs = output.split("\r\n\r\n").filter(p => p.includes("\r\n"));
-            log.info(output, pairs, volumeGUIDPath);
             pairs.forEach(p => {
                 let letterRow = p.split("\r\n")[0];
                 let guidRow = p.split("\r\n")[1];
                 let letter = letterRow.split(" : ")[1];
                 let guid = guidRow.split(" : ")[1];
-                log.info(letterRow, guidRow, letter, guid);
-                //log.info(letter + " = " + guid);
                 if (volumeGUIDPath.includes(guid)) {
                     resolve(volumeGUIDPath.replace(guid, letter + "\\"));
                 }
